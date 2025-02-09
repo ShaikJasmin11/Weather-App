@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+   
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #1e3c72;
+            color: #ffffff;
+            transition: background 1s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            width: 85%;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+            font-size: 1.2rem;
+            transition: background 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: #d3d3d3;
+        }
+
+        button {
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .weather-info {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .weather-info img {
+            width: 80px;
+        }
+
+        .weather-info h2 {
+            margin: 10px 0;
+            font-size: 2rem;
+            color: #e0f7fa;
+        }
+
+        .weather-info p {
+            margin: 8px 0;
+            font-size: 1.2rem;
+            color: #d1ecf1;
+        }
+
+        .weather-info .temp {
+            font-size: 2.5rem;
+            color: #ffeb3b;
+        }
+
+        /* Backgrounds for different weather conditions */
+        .sunny {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+        }
+
+        .cloudy {
+            background: linear-gradient(135deg, #bdbdbd, #757575);
+        }
+
+        .rainy {
+            background: linear-gradient(135deg, #3f87a6, #ebf8e1);
+        }
+
+        .snowy {
+            background: linear-gradient(135deg, #b2ebf2, #ffffff);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 30px 20px;
+            }
+
+            input[type="text"], button {
+                width: 100%;
+                font-size: 1rem;
+            }
+
+            .weather-info h2 {
+                font-size: 1.5rem;
+            }
+
+            .weather-info p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <input type="text" id="city" placeholder="Enter city name">
+        <button id="getWeatherBtn">Get Weather</button>
+        <div class="weather-info" id="weatherInfo"></div>
+    </div>
+
+    <script>
+        document.getElementById('getWeatherBtn').addEventListener('click', getWeather);
+
+        async function getWeather() {
+            const apiKey = '3342914ea4ab8877dd0ece3f792d87e3';
+            const city = document.getElementById('city').value.trim();
+            const weatherInfo = document.getElementById('weatherInfo');
+            const body = document.body;
+
+            // Hide the weather info container initially
+            weatherInfo.style.display = 'none';
+            weatherInfo.innerHTML = ''; // Clear previous data
+
+            if (!city) {
+                weatherInfo.innerHTML = '<p>Please enter a city name.</p>';
+                weatherInfo.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+
+                if (!response.ok) {
+                    throw new Error('City not found');
+                }
+
+                const data = await response.json();
+                const icon = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+                weatherInfo.innerHTML = `
+                    <h2>${data.name}</h2>
+                    <img src="${icon}" alt="Weather Icon">
+                    <p class="temp">${data.main.temp}&deg;C</p>
+                    <p>Humidity: ${data.main.humidity}%</p>
+                    <p>Condition: ${data.weather[0].description}</p>
+                `;
+                
+                // Change background based on weather condition
+                const weatherCondition = data.weather[0].main.toLowerCase();
+                if (weatherCondition.includes('clear')) {
+                    body.className = 'sunny';
+                } else if (weatherCondition.includes('cloud')) {
+                    body.className = 'cloudy';
+                } else if (weatherCondition.includes('rain')) {
+                    body.className = 'rainy';
+                } else if (weatherCondition.includes('snow')) {
+                    body.className = 'snowy';
+                } else {
+                    body.className = '';  // Default
+                }
+
+                // Show the weather info container after content is added
+                weatherInfo.style.display = 'block';
+            } catch (error) {
+                weatherInfo.innerHTML = `<p>${error.message}. Please try again.</p>`;
+                weatherInfo.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
